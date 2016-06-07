@@ -1,3 +1,9 @@
+**.metadata
+**.recommenders
+**RemoteSystemsTempFiles
+**.settings
+**.project
+**.classPath
 *.class
 
 # Mobile Tools for Java (J2ME)
