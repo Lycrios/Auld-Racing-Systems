@@ -31,9 +31,16 @@ public class NetworkScanner extends Thread implements Runnable {
 	}
 
 	private void connectToHost(String serverIP) {
-
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+		}
+		c.setStatus("Connecting to: " + serverIP + "... Please Wait...");
 	}
-
+	
+	private boolean foundServer = false;
+	private String serverIP = "";
+	
 	@Override
 	public void run() {
 		this.c.setStatus("Initializing... Please wait...");
@@ -50,7 +57,6 @@ public class NetworkScanner extends Thread implements Runnable {
 				public void run() {
 
 					boolean sF = false;
-					String serverIP = "";
 					int track = 0 + (current * 20);
 					setName("Scanner: " + track + " - " + (track + 20));
 					for (int t = track; t < (track + 20); t++) {
@@ -69,6 +75,7 @@ public class NetworkScanner extends Thread implements Runnable {
 								System.out.println("Server Found");
 								serverIP = "192.168.1." + t;
 								sF = true;
+								foundServer = true;
 							}
 						} catch (IOException e) {
 							// Nothing found
@@ -116,14 +123,9 @@ public class NetworkScanner extends Thread implements Runnable {
 							}
 						}
 
-						c.setStatus("Network Scan Completed... " + (sF ? "Host Found..." : "No Host Found..."));
-						if (!sF) {
-							new Thread() {
-								@Override
-								public void run() {
-									becomeHost();
-								}
-							}.start();
+						c.setStatus("Network Scan Completed... " + (foundServer ? "Host Found..." : "No Host Found..."));
+						if (!foundServer) {
+							becomeHost();
 						} else {
 							connectToHost(serverIP);
 						}
