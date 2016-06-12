@@ -15,12 +15,12 @@ import java.awt.Point;
 import net.matthewauld.auldracingsystems.client.Colors;
 
 public class UIProgressBar extends UIControl {
-	private float progress = 50;
+	private float	progress	= 50;
 
 	public UIProgressBar() {
 		x = 0;
 		y = 0;
-		width = 400;
+		width = 100;
 		height = 25;
 	}
 

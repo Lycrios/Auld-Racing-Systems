@@ -6,9 +6,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public class Server extends Thread implements Runnable {
-	public static final int	PORT	= 18188;
-	private ArrayList<ClientConnections> connections = new ArrayList<ClientConnections>();
-	private ServerSocket	serverSocket;
+	public static final int					PORT		= 18188;
+	private ArrayList<ClientConnections>	connections	= new ArrayList<ClientConnections>();
+	private ServerSocket					serverSocket;
 
 	public Server() {
 		try {
@@ -16,18 +16,25 @@ public class Server extends Thread implements Runnable {
 		} catch (IOException e) {
 			System.out.println("Port already in use.");
 		}
+		this.start();
+	}
+
+	protected void removeConnection(ClientConnections cc) {
+		connections.remove(cc);
 	}
 
 	@Override
 	public void run() {
-		while (!serverSocket.isClosed()) {
+		setName("LocalServer Socket");
+		while (serverSocket.isBound()) {
 			try {
 				Socket s = serverSocket.accept();
-				connections.add(new ClientConnections(s));
+				connections.add(new ClientConnections(this, s));
+				System.out.println("Total Connections: " + connections.size());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
+
 		}
 	}
 }

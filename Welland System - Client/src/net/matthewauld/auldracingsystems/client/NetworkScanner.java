@@ -17,6 +17,11 @@ public class NetworkScanner extends Thread implements Runnable {
 	private static int	ThreadCount	= 0;
 	private Client		c;
 
+	private boolean		foundServer	= false;
+
+	private String		serverIP	= "";
+	private Socket		socket;
+
 	public NetworkScanner(Client client) {
 		this.c = client;
 	}
@@ -36,13 +41,12 @@ public class NetworkScanner extends Thread implements Runnable {
 		} catch (InterruptedException e) {
 		}
 		c.setStatus("Connecting to: " + serverIP + "... Please Wait...");
+		c.setSocket(this.socket);
 	}
-	
-	private boolean foundServer = false;
-	private String serverIP = "";
-	
+
 	@Override
 	public void run() {
+		setName("Network Scan");
 		this.c.setStatus("Initializing... Please wait...");
 		try {
 			Thread.sleep(1000);
@@ -55,20 +59,22 @@ public class NetworkScanner extends Thread implements Runnable {
 			new Thread() {
 				@Override
 				public void run() {
-
-					boolean sF = false;
 					int track = 0 + (current * 20);
 					setName("Scanner: " + track + " - " + (track + 20));
+					try {
+						Thread.sleep(100 * current);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
+					boolean sF = false;
+
 					for (int t = track; t < (track + 20); t++) {
-						// System.out.println("IP:" + t);
+						if (foundServer) {
+							break;
+						}
 						Socket kkSocket = null;
 						try {
 							kkSocket = new Socket();
-							kkSocket.bind(null); // bind socket to random local
-													// address, but you might
-													// not
-													// need to do this
-
 							kkSocket.connect(new InetSocketAddress("192.168.1." + t, Server.PORT), 500);
 
 							if (kkSocket.isConnected()) {
@@ -76,62 +82,42 @@ public class NetworkScanner extends Thread implements Runnable {
 								serverIP = "192.168.1." + t;
 								sF = true;
 								foundServer = true;
+								socket = kkSocket;
+								break;
 							}
 						} catch (IOException e) {
 							// Nothing found
-						} finally {
-							if (!kkSocket.isClosed()) {
-								try {
-									kkSocket.close();
-								} catch (IOException e) {
-
-								}
-							}
 						}
 					}
 					if (sF) {
 						System.out.println("Server IP: " + serverIP);
 					}
 					ThreadCount++;
-					if (ThreadCount == 13) {
-						System.out.println("Finished Network Check.");
-
-						Socket kkSocket = null;
-						try {
-							kkSocket = new Socket();
-							kkSocket.bind(null); // bind socket to random local
-													// address, but you might
-													// not
-													// need to do this
-
-							kkSocket.connect(new InetSocketAddress("127.0.1.1", Server.PORT), 500);
-
-							if (kkSocket.isConnected()) {
-								System.out.println("Server Found");
-								serverIP = "127.0.0.1";
-								sF = true;
-							}
-						} catch (IOException e) {
-							// Nothing found
-						} finally {
-							if (!kkSocket.isClosed()) {
-								try {
-									kkSocket.close();
-								} catch (IOException e) {
-
-								}
-							}
-						}
-
-						c.setStatus("Network Scan Completed... " + (foundServer ? "Host Found..." : "No Host Found..."));
-						if (!foundServer) {
-							becomeHost();
-						} else {
-							connectToHost(serverIP);
-						}
-					}
 				}
 			}.start();
 		}
+
+		new Thread() {
+			@Override
+			public void run() {
+				setName("Waiting For Network Scan");
+				while (ThreadCount < 13) {
+					try {
+						Thread.sleep(500);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				System.out.println("Finished Network Check.");
+
+				c.setStatus("Network Scan Completed... " + (foundServer ? "Host Found..." : "No Host Found..."));
+				if (!foundServer) {
+					becomeHost();
+				} else {
+					connectToHost(serverIP);
+				}
+
+			}
+		}.start();
 	}
 }
